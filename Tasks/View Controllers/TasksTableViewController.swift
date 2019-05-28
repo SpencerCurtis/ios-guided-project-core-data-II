@@ -9,7 +9,7 @@
 import UIKit
 import CoreData
 
-class TasksTableViewController: UITableViewController {
+class TasksTableViewController: UITableViewController, NSFetchedResultsControllerDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -47,6 +47,45 @@ class TasksTableViewController: UITableViewController {
         }
     }
     
+    // MARK: - NSFetchedResultsControllerDelegate
+    
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.beginUpdates()
+    }
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>,
+                    didChange anObject: Any,
+                    at indexPath: IndexPath?,
+                    for type: NSFetchedResultsChangeType,
+                    newIndexPath: IndexPath?) {
+        
+        // What do we want to do to the table view based on the change type?
+        
+        switch type {
+        case .insert:
+            tableView.insertRows(at: <#T##[IndexPath]#>, with: <#T##UITableViewRowAnimation#>)
+        case .delete:
+            
+        case .move:
+            
+        case .update:
+            
+        }
+    }
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>,
+                    didChange sectionInfo: NSFetchedResultsSectionInfo,
+                    atSectionIndex sectionIndex: Int,
+                    for type: NSFetchedResultsChangeType) {
+        
+    }
+    
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.endUpdates()
+    }
+    
+    
+    
     // MARK: - Navigation
     
     // In a storyboard-based application, you will often want to do a little preparation before navigation
@@ -64,15 +103,20 @@ class TasksTableViewController: UITableViewController {
     // NOTE! This is not a good, efficient way to do this, as the fetch request
     // will be executed every time the tasks property is accessed. We will
     // learn a better way to do this later.
-    var tasks: [Task] {
+    
+    lazy var fetchedResultsController: NSFetchedResultsController<Task> = {
+        
         let fetchRequest: NSFetchRequest<Task> = Task.fetchRequest()
-        let moc = CoreDataStack.shared.mainContext
-        do {
-            return try moc.fetch(fetchRequest)
-        } catch {
-            NSLog("Error fetching tasks: \(error)")
-            return []
-        }
-    }
+        // The key corresponds to the name of an entity's attribute
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "priority", ascending: true),
+                                        NSSortDescriptor(key: "name", ascending: true)]
+        
+        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: CoreDataStack.shared.mainContext, sectionNameKeyPath: "priority", cacheName: nil)
+        
+        fetchedResultsController.delegate = self
+        
+        return fetchedResultsController
+    }()
+    
     
 }

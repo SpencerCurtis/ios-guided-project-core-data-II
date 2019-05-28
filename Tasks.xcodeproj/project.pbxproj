@@ -21,6 +21,8 @@
 
 /* Begin PBXFileReference section */
 		46179D5E229D94DC009CE2C4 /* Tasks 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Tasks 2.xcdatamodel"; sourceTree = "<group>"; };
+		46179D5F229D9CAF009CE2C4 /* Tasks 3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Tasks 3.xcdatamodel"; sourceTree = "<group>"; };
+		46179D60229D9E73009CE2C4 /* Tasks 4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Tasks 4.xcdatamodel"; sourceTree = "<group>"; };
 		9D4408C3211FF431005E2116 /* Tasks.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tasks.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9D4408C6211FF431005E2116 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		9D4408CB211FF431005E2116 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -392,6 +394,8 @@
 		9D4408DB211FF51C005E2116 /* Tasks.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				46179D60229D9E73009CE2C4 /* Tasks 4.xcdatamodel */,
+				46179D5F229D9CAF009CE2C4 /* Tasks 3.xcdatamodel */,
 				46179D5E229D94DC009CE2C4 /* Tasks 2.xcdatamodel */,
 				9D4408DC211FF51C005E2116 /* Tasks.xcdatamodel */,
 			);
