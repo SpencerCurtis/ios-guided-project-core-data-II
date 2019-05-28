@@ -19,14 +19,22 @@ class TasksTableViewController: UITableViewController, NSFetchedResultsControlle
     
     // MARK: - Table view data source
     
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+       return fetchedResultsController.sections?[section].name.capitalized
+    }
+    
+    override func numberOfSections(in tableView: UITableView) -> Int {
+        return fetchedResultsController.sections?.count ?? 1
+    }
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return tasks.count
+        return fetchedResultsController.sections?[section].numberOfObjects ?? 0
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TaskCell", for: indexPath)
         
-        let task = tasks[indexPath.row]
+        let task = fetchedResultsController.object(at: indexPath)
         cell.textLabel?.text = task.name
         
         return cell
@@ -34,7 +42,7 @@ class TasksTableViewController: UITableViewController, NSFetchedResultsControlle
     
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            let task = tasks[indexPath.row]
+            let task = fetchedResultsController.object(at: indexPath)
             let moc = CoreDataStack.shared.mainContext
             moc.delete(task)
             do {
@@ -63,13 +71,19 @@ class TasksTableViewController: UITableViewController, NSFetchedResultsControlle
         
         switch type {
         case .insert:
-            tableView.insertRows(at: <#T##[IndexPath]#>, with: <#T##UITableViewRowAnimation#>)
+            guard let newIndexPath = newIndexPath else { return }
+            tableView.insertRows(at: [newIndexPath], with: .automatic)
         case .delete:
-            
+            guard let indexPath = indexPath else { return }
+            tableView.deleteRows(at: [indexPath], with: .automatic)
         case .move:
-            
+            guard let indexPath = indexPath,
+                let newIndexPath = newIndexPath else { return }
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+            tableView.insertRows(at: [newIndexPath], with: .automatic)
         case .update:
-            
+            guard let indexPath = indexPath else { return }
+            tableView.reloadRows(at: [indexPath], with: .automatic)
         }
     }
     
@@ -77,7 +91,16 @@ class TasksTableViewController: UITableViewController, NSFetchedResultsControlle
                     didChange sectionInfo: NSFetchedResultsSectionInfo,
                     atSectionIndex sectionIndex: Int,
                     for type: NSFetchedResultsChangeType) {
-        
+        switch type {
+        case .insert:
+            let indexSet = IndexSet(integer: sectionIndex)
+            tableView.insertSections(indexSet, with: .automatic)
+        case .delete:
+            let indexSet = IndexSet(integer: sectionIndex)
+            tableView.deleteSections(indexSet, with: .automatic)
+        default:
+            break
+        }
     }
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
@@ -93,7 +116,7 @@ class TasksTableViewController: UITableViewController, NSFetchedResultsControlle
         if segue.identifier == "ShowTaskDetail" {
             let detailVC = segue.destination as! TaskDetailViewController
             if let indexPath = tableView.indexPathForSelectedRow {
-                detailVC.task = tasks[indexPath.row]
+                detailVC.task = fetchedResultsController.object(at: indexPath)
             }
         }
     }
@@ -114,6 +137,12 @@ class TasksTableViewController: UITableViewController, NSFetchedResultsControlle
         let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: CoreDataStack.shared.mainContext, sectionNameKeyPath: "priority", cacheName: nil)
         
         fetchedResultsController.delegate = self
+        
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {
+            NSLog("Error performing initial fetch for frc: \(error)")
+        }
         
         return fetchedResultsController
     }()
