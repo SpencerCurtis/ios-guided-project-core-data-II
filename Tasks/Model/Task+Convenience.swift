@@ -31,10 +31,62 @@ enum TaskPriority: String {
 }
 
 extension Task {
-    convenience init(name: String, notes: String? = nil, priority: TaskPriority, context: NSManagedObjectContext = CoreDataStack.shared.mainContext) {
+    
+    convenience init(name: String, notes: String? = nil, priority: TaskPriority, identifier: UUID = UUID(), context: NSManagedObjectContext = CoreDataStack.shared.mainContext) {
         self.init(context: context)
         self.name = name
         self.notes = notes
         self.priority = priority.rawValue
+        self.identifier = identifier
+    }
+    
+    // Used for converting a TaskRepresentation from Firebase to a Task object
+    
+    convenience init?(taskRepresentation: TaskRepresentation,
+                     context: NSManagedObjectContext = CoreDataStack.shared.mainContext) {
+        
+        guard let priority = TaskPriority(rawValue: taskRepresentation.priority),
+            let identifier = UUID(uuidString: taskRepresentation.identifier) else {
+                // We don't have enough information to create a Task object, return nil instead
+                return nil
+        }
+        
+        self.init(name: taskRepresentation.name, notes: taskRepresentation.notes, priority: priority, identifier: identifier, context: context)
+    }
+    
+    // Used for sending the Task object to Firebase
+    
+    var taskRepresentation: TaskRepresentation? {
+        
+        guard let name = name,
+            let priority = priority else { return nil }
+        
+        return TaskRepresentation(name: name, notes: notes, priority: priority, identifier: identifier?.uuidString ?? "")
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
