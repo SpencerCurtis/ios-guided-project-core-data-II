@@ -31,8 +31,16 @@ class TaskDetailViewController: UIViewController {
             task.name = name
             task.notes = notes
             task.priority = priority.rawValue
+            
+            taskController?.put(task: task, completion: { (_) in
+                // In a real app, handle the error with an alert or something similar to show the user that the task was not saved to Firebase
+            })
         } else {
-            let _ = Task(name: name, notes: notes, priority: priority)
+            let task = Task(name: name, notes: notes, priority: priority)
+            
+            taskController?.put(task: task, completion: { (_) in
+                // Same as above
+            })
         }
         
         do {
@@ -63,6 +71,7 @@ class TaskDetailViewController: UIViewController {
     
     // MARK: Properties
     
+    var taskController: TaskController?
     var task: Task? {
         didSet {
             updateViews()

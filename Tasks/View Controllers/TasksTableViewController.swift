@@ -11,8 +11,14 @@ import CoreData
 
 class TasksTableViewController: UITableViewController, NSFetchedResultsControllerDelegate {
 
+    let taskController = TaskController()
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        taskController.fetchTasksFromServer { (_) in
+            
+        }
         
         tableView.reloadData()
     }
@@ -117,7 +123,12 @@ class TasksTableViewController: UITableViewController, NSFetchedResultsControlle
             let detailVC = segue.destination as! TaskDetailViewController
             if let indexPath = tableView.indexPathForSelectedRow {
                 detailVC.task = fetchedResultsController.object(at: indexPath)
+                detailVC.taskController = taskController
             }
+        } else if segue.identifier == "ShowCreateTask" {
+            let detailVC = segue.destination as! TaskDetailViewController
+            
+            detailVC.taskController = taskController
         }
     }
     
