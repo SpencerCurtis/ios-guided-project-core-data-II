@@ -18,16 +18,6 @@ enum TaskPriority: String {
     static var allPriorities: [TaskPriority] {
         return [.low, .normal, .high, .critical]
     }
-    
-//    static func priority(for index: Int) -> TaskPriority {
-//        switch index {
-//        case 0:
-//            return .low
-//
-//        default:
-//            <#code#>
-//        }
-//    }
 }
 
 extension Task {
@@ -50,7 +40,7 @@ extension Task {
                 // We don't have enough information to create a Task object, return nil instead
                 return nil
         }
-        
+
         self.init(name: taskRepresentation.name, notes: taskRepresentation.notes, priority: priority, identifier: identifier, context: context)
     }
     

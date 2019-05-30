@@ -46,7 +46,7 @@ class TasksTableViewController: UITableViewController, NSFetchedResultsControlle
         return cell
     }
     
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             let task = fetchedResultsController.object(at: indexPath)
             let moc = CoreDataStack.shared.mainContext
@@ -90,6 +90,8 @@ class TasksTableViewController: UITableViewController, NSFetchedResultsControlle
         case .update:
             guard let indexPath = indexPath else { return }
             tableView.reloadRows(at: [indexPath], with: .automatic)
+        default:
+            break
         }
     }
     
