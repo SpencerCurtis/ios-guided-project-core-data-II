@@ -6,6 +6,8 @@
 //  Copyright © 2018 Andrew R Madsen. All rights reserved.
 //
 
+// Go through this file and figure out where we want to use a background context or the main context. (Could be multiple places)
+
 import Foundation
 import CoreData
 
@@ -48,12 +50,16 @@ class TaskController {
                 return
             }
             
-            task.identifier = identifier
+            CoreDataStack.shared.mainContext.performAndWait {
+                task.identifier = identifier
+            }
             
-            try? self.saveToPersistentStore()
+            
+            // Which context do we use?
+            try? CoreDataStack.shared.save(context: CoreDataStack.shared.mainContext)
             
             completion(nil)
-        }.resume()
+            }.resume()
     }
     
     func fetchTasksFromServer(completion: @escaping (Error?) -> Void) {
@@ -90,7 +96,7 @@ class TaskController {
                 completion(error)
                 return
             }
-        }.resume()
+            }.resume()
     }
     
     func updateTasks(with taskRepresentations: [TaskRepresentation]) throws {
@@ -99,26 +105,32 @@ class TaskController {
         // If it does, is it different?
         // If it doesn't, then I need to save it into Core Data
         
-        for taskRep in taskRepresentations {
+        let backgroundContext = CoreDataStack.shared.container.newBackgroundContext()
+        
+        backgroundContext.performAndWait {
             
-            guard let identifier = UUID(uuidString: taskRep.identifier) else { continue }
-            
-            if let task = getTaskFromCoreData(forUUID: identifier) {
+            for taskRep in taskRepresentations {
                 
-                // It already exists in Core Data
-                task.name = taskRep.name
-                task.notes = taskRep.notes
-                task.priority = taskRep.priority
+                guard let identifier = UUID(uuidString: taskRep.identifier) else { continue }
                 
-            } else {
-                let _ = Task(taskRepresentation: taskRep)
+                if let task = getTaskFromCoreData(forUUID: identifier, context: backgroundContext) {
+                    
+                    // It already exists in Core Data
+                    task.name = taskRep.name
+                    task.notes = taskRep.notes
+                    task.priority = taskRep.priority
+                    
+                } else {
+                    let _ = Task(taskRepresentation: taskRep, context: backgroundContext)
+                }
             }
         }
         
-        try saveToPersistentStore()
+        try CoreDataStack.shared.save(context: backgroundContext)
     }
     
-    func getTaskFromCoreData(forUUID uuid: UUID) -> Task? {
+    // We can get a task from ANY context we want, and do it (thread) safely
+    func getTaskFromCoreData(forUUID uuid: UUID, context: NSManagedObjectContext) -> Task? {
         
         let fetchRequest: NSFetchRequest<Task> = Task.fetchRequest()
         
@@ -126,13 +138,17 @@ class TaskController {
         
         fetchRequest.predicate = NSPredicate(format: "identifier == %@", uuid as NSUUID)
         
-        do {
-            let moc = CoreDataStack.shared.mainContext
-            return try moc.fetch(fetchRequest).first
-        } catch {
-            NSLog("Error fetching task with UUID \(uuid): \(error)")
-            return nil
+        var result: Task? = nil
+        
+        context.performAndWait {
+            do {
+                result = try context.fetch(fetchRequest).first
+            } catch {
+                NSLog("Error fetching task with UUID \(uuid): \(error)")
+            }
         }
+        
+        return result
     }
     
     

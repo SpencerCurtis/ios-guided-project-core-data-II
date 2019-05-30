@@ -9,13 +9,13 @@
 import UIKit
 
 class TaskDetailViewController: UIViewController {
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         updateViews()
     }
-
+    
     @IBAction func save(_ sender: Any) {
         guard let name = nameTextField.text, !name.isEmpty else {
             return
@@ -26,28 +26,30 @@ class TaskDetailViewController: UIViewController {
         
         let priority = TaskPriority.allPriorities[priorityIndex]
         
-        if let task = task {
-            // Editing existing task
-            task.name = name
-            task.notes = notes
-            task.priority = priority.rawValue
+        CoreDataStack.shared.mainContext.performAndWait {
             
-            taskController?.put(task: task, completion: { (_) in
-                // In a real app, handle the error with an alert or something similar to show the user that the task was not saved to Firebase
-            })
-        } else {
-            let task = Task(name: name, notes: notes, priority: priority)
+            if let task = task {
+                // Editing existing task
+                task.name = name
+                task.notes = notes
+                task.priority = priority.rawValue
+                
+                taskController?.put(task: task, completion: { (_) in
+                    // In a real app, handle the error with an alert or something similar to show the user that the task was not saved to Firebase
+                })
+            } else {
+                let task = Task(name: name, notes: notes, priority: priority)
+                
+                taskController?.put(task: task, completion: { (_) in
+                    // Same as above
+                })
+            }
             
-            taskController?.put(task: task, completion: { (_) in
-                // Same as above
-            })
-        }
-        
-        do {
-            let moc = CoreDataStack.shared.mainContext
-            try moc.save()
-        } catch {
-            NSLog("Error saving managed object context: \(error)")
+            do {
+                try CoreDataStack.shared.save(context: CoreDataStack.shared.mainContext)
+            } catch {
+                NSLog("Error saving managed object context: \(error)")
+            }
         }
         
         navigationController?.popViewController(animated: true)
@@ -57,9 +59,17 @@ class TaskDetailViewController: UIViewController {
         guard let task = self.task,
             isViewLoaded else { return }
         
-        title = task.name ?? "Create Task"
-        nameTextField.text = task.name
-        notesTextView.text = task.notes
+        var name: String?
+        var notes: String?
+        
+        task.managedObjectContext?.performAndWait {
+            name = task.name
+            notes = task.notes
+        }
+        
+        title = name ?? "Create Task"
+        nameTextField.text = name
+        notesTextView.text = notes
         
         if let taskPriority = task.priority,
             let priority = TaskPriority(rawValue: taskPriority) {
@@ -77,7 +87,7 @@ class TaskDetailViewController: UIViewController {
             updateViews()
         }
     }
-
+    
     @IBOutlet var nameTextField: UITextField!
     @IBOutlet var notesTextView: UITextView!
     @IBOutlet weak var priorityControl: UISegmentedControl!
